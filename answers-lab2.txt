@@ -1,0 +1,35 @@
+a)    +-----+----------------------+---------------------------------------+
+    |Entry| Base Virtual Address |  Points to (logically)                |
+    +=====+======================+=======================================+
+    |1023 | 0xFFC00000           | Page table for top 4MB of phys memory |
+    +-----+----------------------+---------------------------------------+
+    |1022 | 0xFF800000           | Kernel memory
+    +-----+----------------------+---------------------------------------+
+    |PDX  | 0xEF000000           | PageInfo array
+    +-----+----------------------+---------------------------------------+
+    |960  | 0xF0000000           | Physical address 0x00000000 
+    +-----+----------------------+---------------------------------------+
+    |PDX  | KSTACKTOP-PTSIZE     | Kernel stack
+    +-----+----------------------+---------------------------------------+
+    |2    | 0x00800000           | Low memory/early boot identity mappings
+    +-----+----------------------+---------------------------------------+
+    |1    | 0x00400000           | Low memory/early boot identity mappings
+    +-----+----------------------+---------------------------------------+
+    |0    | 0x00000000           | Identity mapping for boot
+    +-----+----------------------+---------------------------------------+
+
+b)User programs can't access kernel memory because page table permission bits. 
+Pages are mapped without the user permission flag, so when user-mode code tried to access the kernel page, a pade fault exception will be raised by the CPU.
+ 
+c) 4 GB because jos uses a 32 bit physical address. 2 ^ 32 = 4 GB
+
+d) Theres 12MB of memory overhead from three structures. 
+The page directory, 1024 * 4 is 4KB. 
+Page tables is 1024 * 4KB is 4MB. 
+Finally PageInfo is about 1048576 pages and one pageInfo array per page making about 8MB.
+
+e) After paging is enables, executiuon continues at a low address because both the low physical memory and higher-half kernel at KERNBASE are mapped by the entry page table.
+ A transition to an EIP above KERNBASE happens when control jumps to the linked virtual address during initialization. 
+The dual mapping allows the CPU to execute while paging is on. Otherwise, the CPU would try to fetch the following instruction using virtual address that wasn't mapped, leading to a page fault. 
+This transition is necessary because the kernel is linked to run at the high virtual address, while physically loaded. 
+
