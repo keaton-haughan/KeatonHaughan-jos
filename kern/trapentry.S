@@ -71,6 +71,7 @@ TRAPHANDLER_NOEC(t_fperr, T_FPERR)      // 16 - no error code
 TRAPHANDLER(t_align, T_ALIGN)           // 17 - has error code (zero)
 TRAPHANDLER_NOEC(t_mchk, T_MCHK)        // 18 - no error code
 TRAPHANDLER_NOEC(t_simderr, T_SIMDERR)  // 19 - no error code
+TRAPHANDLER_NOEC(t_syscall, T_SYSCALL)
 
 /*
  * Lab 3: Your code here for _alltraps

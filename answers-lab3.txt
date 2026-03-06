@@ -27,3 +27,31 @@ EXERCISE 4
     If the kernel actually allowed a user to invoke the kernel's page fault handler, then the user program
     could call interrupt 14 with an invalid address. A malicious program could do this on purpose to derail
     the system by gaining further access to memory a user shouldn't have or overwriting kernel memory. 
+
+3. The breakpoint test case will either generate a breakpoint exception or a general protection fault depending on
+   how you initialized the breakpoint entry in the IDT. Why?
+    
+    ANSWER: The breakpoint test depends on the privilege level of the breakpoint gate in the IDT. The int instruction 
+    is meant to be usable from user mode, so then the IDT entry for T_BRKPT must be set with DPL 3. With that setup, user code 
+    can legally invoke the breakpoint exception and enter the kernel monitor. If the breakpoint gate is incorrectly set with 
+    DPL 0, then a user-mode int3 is not allowed to invoke it, and the processor generates a general protection fault instead
+    of a breakpoint exception.
+
+4. What do you think is the point of these mechanism, particularly in the light of what the user/softint
+   test program does? 
+
+    ANSWER: The point of these mechanisms is to ensure that user programs can only enter the kernel through entry points that 
+    the kernel explicitly authorizes. The IDT and gate privilege levels let the kernel expose specific controlled interfaces, 
+    such as breakpoints and system calls, while blocking user code from invoking privileged exception handlers directly. 
+    The user/softint program demonstrates why this matters, user code can try to execute int with any vector number, 
+    so the kernel must rely on the hardware privilege checks to allow only the intended entry points and reject the rest.
+
+5. If you run user/breakpoint, you should be able to run backtrace from the kernel monitor and see the 
+   backtrace traverse into lib/libmain.c before the kernel panics with a page fault. 
+   What causes this page fault?
+
+    ANSWER: The page fault during backtrace after running user/breakpoint happens because the kernel successfully validates and 
+    reads the user STABS debug metadata, but later the backtrace/debugging path ends up following information that refers to user
+    memory that is not actually mapped or not safely accessible in the current context. In other words, the kernel can begin walking
+    the user debug information, but eventually it touches an unmapped user address while trying to continue the backtrace, which causes
+    a page fault. This happens in kernel mode during debugging/backtrace processing, so the kernel panics.
