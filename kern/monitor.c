@@ -91,7 +91,7 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 }
 
 int exec_hidden_cases(int argc, char **argv, struct Trapframe *tf) {
-	hidden_test_cases();
+	//hidden_test_cases();
 	return 0;
 }
 

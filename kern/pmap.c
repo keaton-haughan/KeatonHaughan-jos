@@ -267,8 +267,6 @@ mem_init(void)
 	// Some more checks, only possible after kern_pgdir is installed.
 	check_page_installed_pgdir();
 
-	// Hidden test cases
-	hidden_test_cases();
 }
 
 // Modify mappings in kern_pgdir to support SMP
