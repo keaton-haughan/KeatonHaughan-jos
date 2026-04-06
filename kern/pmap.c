@@ -293,7 +293,11 @@ mem_init_mp(void)
 	//     Permissions: kernel RW, user NONE
 	//
 	// LAB 4: Your code here:
-
+	int i;
+    for (i = 0; i < NCPU; i++) {
+        uintptr_t kstacktop_i = KSTACKTOP - i * (KSTKSIZE + KSTKGAP);
+        boot_map_region(kern_pgdir, kstacktop_i - KSTKSIZE, KSTKSIZE, PADDR(percpu_kstacks[i]), PTE_W);
+    }
 }
 
 // --------------------------------------------------------------
@@ -332,7 +336,7 @@ page_init(void)
 	// Change the code to reflect this.
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
-size_t i;
+	size_t i;
 	physaddr_t first_free_pa = PADDR(boot_alloc(0));
 
 	page_free_list = NULL;
@@ -343,6 +347,10 @@ size_t i;
 		pages[i].pp_link = NULL;
 
 		if (i == 0)
+			continue;
+		
+		// LAB 4
+		if (pa == MPENTRY_PADDR)
 			continue;
 
 		if (i < npages_basemem) {
@@ -634,7 +642,26 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Hint: The staff solution uses boot_map_region.
 	//
 	// Your code here:
-	panic("mmio_map_region not implemented");
+	// panic("mmio_map_region not implemented");
+	// TA hints in video:
+	//   its reserve size bytes in the MMIO region
+	//   map those byte to [pa, pa_size]
+	//   set the cache disable, write through and write permission to the mapped pages
+	//   update base, observe that it is a static variable
+	//   returns base address (virtual address) or the reserved region
+	//   page offset can be used to find the virtual address which is mapped to the physical address (the argument)
+	
+	// Round size up to page boundary, incorporating any page offset in pa
+    size = ROUNDUP(pa + size, PGSIZE) - ROUNDDOWN(pa, PGSIZE);
+    pa = ROUNDDOWN(pa, PGSIZE);
+    // Check for overflow past MMIOLIM
+    if (base + size > MMIOLIM)
+        panic("mmio_map_region: out of MMIO space");
+    // Map the physical range with cache-disable, write-through, and writable
+    boot_map_region(kern_pgdir, base, size, pa, PTE_W | PTE_PCD | PTE_PWT);
+    uintptr_t result = base;
+    base += size;
+    return (void *)result;
 }
 
 
