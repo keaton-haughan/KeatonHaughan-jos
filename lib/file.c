@@ -141,7 +141,14 @@ devfile_write(struct Fd *fd, const void *buf, size_t n)
 	// remember that write is always allowed to write *fewer*
 	// bytes than requested.
 	// LAB 5: Your code here
-	panic("devfile_write not implemented");
+	// fsipcbuf points to the shared buffer, make a write request RPC
+	// first set values of struct write (req_fileid, req_n, req_buf (size?))
+	// perform ipc using fsipc()
+	// fsipc() performs ipc_send() and returns the return value with ipc_rev()
+	fsipcbuf.write.req_fileid = fd->fd_file.id;
+    fsipcbuf.write.req_n = MIN(n, sizeof(fsipcbuf.write.req_buf));
+    memmove(fsipcbuf.write.req_buf, buf, fsipcbuf.write.req_n);
+    return fsipc(FSREQ_WRITE, NULL);
 }
 
 static int

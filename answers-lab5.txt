@@ -1,0 +1,10 @@
+Lab 5 answers
+
+Question 1.
+Do you have to do anything else to ensure that this I/O privilege setting
+is saved and restored properly when you subsequently switch from one
+environment to another? Why?
+
+No, we don't have to do anything else. The IOPL bits are on the EFLAGS
+register, which is already saved with env_tf trap frame when there's a
+context switch from one environment to another.
