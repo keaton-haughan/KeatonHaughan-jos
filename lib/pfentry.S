@@ -66,17 +66,34 @@ _pgfault_upcall:
 	//
 	// LAB 4: Your code here.
 
+	// utf_esp is at 48(%esp), utf_eip is at 40(%esp)
+	movl 40(%esp), %eax		// %eax = utf_eip
+	subl $4, 48(%esp)		// utf_esp -= 4
+	movl 48(%esp), %ebx		// %ebx = new utf_esp
+	movl %eax, (%ebx)		// *(utf_esp) = utf_eip
+
 	// Restore the trap-time registers.  After you do this, you
 	// can no longer modify any general-purpose registers.
 	// LAB 4: Your code here.
+
+	addl $8, %esp			// skip utf_fault_va and utf_err
+	popal				// restore edi, esi, ebp, oesp, ebx, edx, ecx, eax
+
 
 	// Restore eflags from the stack.  After you do this, you can
 	// no longer use arithmetic operations or anything else that
 	// modifies eflags.
 	// LAB 4: Your code here.
 
+	addl $4, %esp			// skip utf_eip (already placed on trap-time stack)
+	popfl				// restore trap-time eflags
+
 	// Switch back to the adjusted trap-time stack.
 	// LAB 4: Your code here.
 
+	popl %esp			// restore trap-time esp
+
 	// Return to re-execute the instruction that faulted.
 	// LAB 4: Your code here.
+
+	ret

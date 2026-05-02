@@ -1,0 +1,34 @@
+Lab 4 answers.
+
+EXERCISE 2
+1.
+MPBOOTPHYS calculates the physical address for symbols by subtracting the link address and
+adding MPENTRY_PADDR. This is necessary in kern/mpentry.S because that file is linked to run
+at a virtual address above KERNBASE. In boot/boot.S, it is not necessary because it is loaded
+at a lower address. If it were ommitted, then AP would try to jump to high addresses before
+paging is enabled on them, which would cause a crash.
+
+
+EXERCISE 5
+1.
+When a CPU switches from user mode to kernel mode, the trap frame is pushed onto
+the kernel stack before any kernel code runs, before the big kernel lock is
+acquired. In this time, 2 CPUs could be writing to the kernel stack with no lock
+protection. consider the scenario where CPU 1 and CPU 2 trap from user mode at
+the same time. CPU 1 pushes the trap frame onto the shared kernel stack, but
+before it acquires the lock, CPU 2 also pushes the trap frame onto the kernel
+stack, which now overwrites CPU 1's data, and corrupts the trap frames. 
+
+
+EXERCISE 6
+1.
+The pointer e is a kernel virtual address that maps to the same physical address
+in all environments' page tables, because all environments share the same kernel
+mapping above KERNBASE. So, pointer e can be dereferenced both before and after
+the addressing switch because it always resolves to the same physical memory,
+regardless of which page table was loaded. 
+
+2.
+Registers are saved in order to save the CPU state so the environnment can resume
+later, after a context switch. This happens in trap() in kern/trap.c, where the trap
+frame is copied into curenv->env_tf.
